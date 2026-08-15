@@ -386,7 +386,7 @@ class DexiMemoryProvider(MemoryProvider):
         order: list[str] = []
         if mode in ("hybrid", "semantic"):
             sem = _structured(self._call("semantic_search", {
-                "query": query[:500], "size": size, "full_text": full_text, "intent": intent,
+                "query": query[:500], "size": size, "full_text": full_text or None, "intent": intent,
             }, timeout=t))
             for i in sem.get("items") or []:
                 i = dict(i)
@@ -395,7 +395,7 @@ class DexiMemoryProvider(MemoryProvider):
                 order.append(i["id"])
         if mode in ("hybrid", "keyword"):
             kw = _structured(self._call("search_notes", {
-                "query": query[:200], "size": size, "full_text": full_text, "intent": intent,
+                "query": query[:200], "size": size, "full_text": full_text or None, "intent": intent,
             }, timeout=t))
             for i in kw.get("items") or []:
                 if i["id"] in merged:
@@ -415,10 +415,15 @@ class DexiMemoryProvider(MemoryProvider):
         return _with_url(note)
 
     def _tool_list(self, args: dict[str, Any]) -> dict[str, Any]:
-        out = _structured(self._call("list_notes", {
+        list_args = {
             k: args.get(k) for k in
-            ("source", "tag", "folder", "period", "since", "sort", "page", "size", "full_text", "intent")
-        }, timeout=self._tool_timeout()))
+            ("source", "tag", "folder", "period", "since", "sort", "page", "size", "intent")
+        }
+        # Optional server-side extras: send only when set, so older servers
+        # (without the param) don't reject the call.
+        if args.get("full_text"):
+            list_args["full_text"] = True
+        out = _structured(self._call("list_notes", list_args, timeout=self._tool_timeout()))
         out = dict(out)
         out["items"] = [_with_url(i) for i in out.get("items") or []]
         return out

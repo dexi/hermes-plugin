@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
+import contextvars
 import contextlib
 import json
 import logging
@@ -118,8 +119,12 @@ class McpHttpBridge:
             self._connected.clear()
             self._connect_error = None
             self._loop = asyncio.new_event_loop()
+            # Run the loop thread inside the caller's contextvars context so
+            # Hermes' force_interactive_oauth() / suppress_interactive_oauth()
+            # (ContextVar-based) reach the OAuth flow, which runs on this thread.
+            ctx = contextvars.copy_context()
             self._thread = threading.Thread(
-                target=self._thread_main, name="hermes-dexi-mcp", daemon=True
+                target=ctx.run, args=(self._thread_main,), name="hermes-dexi-mcp", daemon=True
             )
             self._thread.start()
 
