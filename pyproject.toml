@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hermes-dexi"
+version = "0.1.0"
+description = "Dexi memory provider for Hermes Agent — your notes library as agent memory over Dexi's MCP server (OAuth, no API key)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Dexi", email = "team@dexi.net" }]
+keywords = ["hermes-agent", "hermes-plugin", "memory-provider", "mcp", "notes", "second-brain"]
+dependencies = ["mcp>=1.26,<2", "httpx>=0.27"]
+
+[project.urls]
+Homepage = "https://dexi.net/mcp/hermes"
+Documentation = "https://docs.dexi.net/mcp/overview"
+Source = "https://github.com/dexi/hermes-plugin"
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+# Hermes discovers pip-installed providers through this group.
+[project.entry-points."hermes_agent.memory_providers"]
+dexi = "hermes_dexi:register"
+
+[tool.setuptools]
+packages = ["hermes_dexi"]
+
+[tool.setuptools.package-data]
+hermes_dexi = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The repo root has an __init__.py (Hermes loads the clone as a package), so
+# pytest's default rootdir-package resolution would import it standalone and
+# trip its relative import; importlib mode keeps tests decoupled from that.
+addopts = "--import-mode=importlib"
+pythonpath = ["."]

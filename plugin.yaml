@@ -1,0 +1,18 @@
+name: dexi
+version: "0.1.0"
+description: "Dexi — your notes library (clipped pages, emails, feeds, typed notes) as Hermes memory: recall before each turn, dexi_* tools, optional session digest. OAuth, no API key."
+author: "Dexi <team@dexi.net>"
+homepage: https://dexi.net/mcp/hermes
+memory_provider: true
+hooks:
+  - system_prompt_block
+  - prefetch
+  - queue_prefetch
+  - sync_turn
+  - on_session_end
+  - on_session_switch
+  - on_pre_compress
+  - shutdown
+python_dependencies:
+  - "mcp>=1.26,<2"
+  - "httpx>=0.27"
