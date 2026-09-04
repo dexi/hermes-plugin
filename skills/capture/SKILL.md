@@ -13,7 +13,8 @@ How to write the note:
 2. **Title**: a short, specific noun phrase the user could find again later (e.g. "Railway healthchecks probe PORT, not the domain target port").
 3. **Tags**: write 1–3 relevant `#hashtags` inline in the body — Dexi parses them into tags automatically. Reuse the user's existing vocabulary (call `dexi_tags` if unsure rather than inventing near-duplicates).
 4. **Body**: plain text. `[[Wiki Links]]` to related note titles are supported and encouraged when you know a related note exists.
-5. **Existing note on the topic?** Run `dexi_search` first; if one clearly matches, `dexi_append` to it instead of creating a near-duplicate.
+5. **Properties**: when the note has structured facts the user might filter on later (a status, a rating, a due date, an author), write them as `key:: value` lines at the start of the body — `status:: reading`, `due:: 2026-09-10`, `rating:: 4`. Dexi parses them into typed properties that bases can filter and sort. Reuse keys the user already has (`dexi_query_base` / `dexi_bases` show them) rather than inventing near-duplicates.
+6. **Existing note on the topic?** Run `dexi_search` first; if one clearly matches, `dexi_append` to it instead of creating a near-duplicate.
 
 Call `dexi_save` with the title and body, then confirm to the user with the note title and the `url` from the result.
 

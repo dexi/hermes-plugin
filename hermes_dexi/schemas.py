@@ -78,7 +78,9 @@ SAVE = _tool(
     "Create a new Dexi note. Save distilled knowledge the user will want later — a "
     "decision, a fact, a summary — not raw conversation. Use a short noun-phrase title, "
     "plain text body, and 1-3 inline #hashtags (check dexi_tags first to reuse the "
-    "user's existing tags). Returns the note id and URL.",
+    "user's existing tags). Structured facts the user may filter on later (status, rating, "
+    "due date, author) go on their own lines as `key:: value` — Dexi parses them into "
+    "properties that bases can query. Returns the note id and URL.",
     {
         "title": {"type": "string", "description": "Short noun-phrase title."},
         "text": {"type": "string", "description": "Plain-text body; #hashtags and [[Wiki Links]] are recognized."},
@@ -113,6 +115,30 @@ FOLDERS = _tool(
     {},
 )
 
+BASES = _tool(
+    "dexi_bases",
+    "List the user's saved Dexi bases — database-style views over notes (a reading list, "
+    "open applications, a literature table) built from `key:: value` property lines. "
+    "Returns each base's name and its views (table/cards). Run one with dexi_query_base.",
+    {},
+)
+
+QUERY_BASE = _tool(
+    "dexi_query_base",
+    "Run a saved Dexi base: the user's own filter and sort applied to every note they "
+    "can see, with each note's `key:: value` properties. Use it for 'show me my reading "
+    "list' / 'what's due this week' instead of re-deriving the filter; check dexi_bases "
+    "for names. Pass full_text=true (≤10 results) to read bodies inline.",
+    {
+        "name": {"type": "string", "description": "Base name (case-insensitive). See dexi_bases."},
+        "view": {"type": "string", "description": "View name within the base (default: its first view)."},
+        "page": {"type": "integer", "minimum": 1, "default": 1},
+        "size": {"type": "integer", "minimum": 1, "maximum": 50, "default": 10},
+        "full_text": {"type": "boolean", "default": False},
+    },
+    ["name"],
+)
+
 REVIEWS_DUE = _tool(
     "dexi_reviews_due",
     "Spaced-repetition: notes due for review now (only if the user has set up review "
@@ -131,7 +157,7 @@ REVIEW_GRADE = _tool(
     ["note_id", "grade"],
 )
 
-READ_TOOLS: list[dict[str, Any]] = [SEARCH, GET, LIST, TAGS, FOLDERS, REVIEWS_DUE]
+READ_TOOLS: list[dict[str, Any]] = [SEARCH, GET, LIST, TAGS, FOLDERS, BASES, QUERY_BASE, REVIEWS_DUE]
 WRITE_TOOLS: list[dict[str, Any]] = [SAVE, APPEND, REVIEW_GRADE]
 ALL_TOOLS: list[dict[str, Any]] = READ_TOOLS + WRITE_TOOLS
 TOOL_NAMES = {t["name"] for t in ALL_TOOLS}

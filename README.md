@@ -6,7 +6,7 @@ Two ways to use it, pick one:
 
 | | MCP server (`mcp_servers.dexi`) | **Memory provider (this plugin)** |
 |---|---|---|
-| Tools | all 12 Dexi tools as `mcp_dexi_*` | compact `dexi_*` set (search / get / list / save / append / tags / folders / reviews) |
+| Tools | all fourteen Dexi tools as `mcp_dexi_*` | compact `dexi_*` set (search / get / list / save / append / tags / folders / bases / reviews) |
 | Auto-recall before each turn (`<dexi-context>`) | — | ✅ |
 | System-prompt guidance | — | ✅ |
 | Session digest note (opt-in) | — | ✅ |
@@ -47,7 +47,7 @@ Requires `mcp>=1.26,<2` and `httpx` (both already present in a Hermes install wi
 ## What it does
 
 - **`prefetch`** — before each non-trivial turn, semantic search over your notes for the incoming message (plus a keyword pass when it contains a `#hashtag` or a "quoted phrase"); hits above the similarity floor are injected as a `<dexi-context>` block of titles + snippets. Never full bodies — the model calls `dexi_get`/`full_text` when it wants one. Best-effort, ~2.5 s budget, failures inject nothing.
-- **Tools** — `dexi_search` (hybrid keyword+semantic, `full_text` option), `dexi_get`, `dexi_list` (source/tag/folder/period/`since`), `dexi_save`, `dexi_append`, `dexi_tags`, `dexi_folders`, `dexi_reviews_due`, `dexi_review_grade`. Each forwards to Dexi's MCP tool of the same purpose; each accepts an optional `intent` sentence for Dexi's aggregate tool analytics.
+- **Tools** — `dexi_search` (hybrid keyword+semantic, `full_text` option), `dexi_get`, `dexi_list` (source/tag/folder/period/`since`), `dexi_save`, `dexi_append`, `dexi_tags`, `dexi_folders`, `dexi_bases` + `dexi_query_base` (the user's saved database views over `key:: value` properties), `dexi_reviews_due`, `dexi_review_grade`. Each forwards to Dexi's MCP tool of the same purpose; each accepts an optional `intent` sentence for Dexi's aggregate tool analytics.
 - **Session digest** (off by default) — one note per session, written at session end / switch / pre-compress / shutdown, never per turn: the questions asked, the last answer, and the session id, tagged `#hermes`. Deterministic; no LLM call in the plugin. Idempotent per session.
 - **Not done, on purpose** — no note per turn, no mirroring of `MEMORY.md`/`USER.md`, no o2b-style rules/provenance/rollback. Dexi is your notes app; the agent is a reader and an occasional, deliberate writer.
 

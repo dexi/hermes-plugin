@@ -4,8 +4,8 @@ What this adds over a plain ``mcp_servers.dexi`` entry is the *hooks*:
 recall before each turn (``prefetch`` → Dexi semantic search injected as
 ``<dexi-context>``), a system-prompt block, and — opt-in — one distilled
 digest note per session (``on_session_end`` / ``on_pre_compress`` /
-``shutdown``). Tools are a compact ``dexi_*`` set forwarding to Dexi's MCP
-tools over the bridge; every read/write inherits the user's OAuth grant,
+``shutdown``). Tools are a compact ``dexi_*`` set (search / get / list / save / append /
+tags / folders / bases / reviews) forwarding to Dexi's MCP tools over the bridge; every read/write inherits the user's OAuth grant,
 scopes, and any per-connection folder/tag restriction set on Dexi's consent
 page.
 
@@ -181,7 +181,9 @@ class DexiMemoryProvider(MemoryProvider):
             "pages, emailed articles, and RSS entries. Before answering questions about the "
             "user's own material, research, or past decisions, search it with dexi_search "
             "(hybrid keyword+semantic; full_text=true to read bodies) — relevant notes are "
-            "also pre-loaded in <dexi-context> when available. Cite notes by title with their url.",
+            "also pre-loaded in <dexi-context> when available. Cite notes by title with their url. "
+            "For a list the user has already defined (a reading list, open applications), "
+            "dexi_bases + dexi_query_base run their saved filter instead of re-deriving it.",
         ]
         if self._cfg.get("read_only"):
             lines.append("This connection is read-only.")
@@ -453,6 +455,25 @@ class DexiMemoryProvider(MemoryProvider):
     def _tool_folders(self, args: dict[str, Any]) -> dict[str, Any]:
         return _structured(self._call("list_folders", {"intent": args.get("intent")},
                                       timeout=self._tool_timeout()))
+
+    def _tool_bases(self, args: dict[str, Any]) -> dict[str, Any]:
+        return _structured(self._call("list_bases", {"intent": args.get("intent")},
+                                      timeout=self._tool_timeout()))
+
+    def _tool_query_base(self, args: dict[str, Any]) -> dict[str, Any]:
+        name = str(args.get("name") or "").strip()
+        if not name:
+            raise BridgeError("name is required (call dexi_bases for the user's base names)")
+        query_args: dict[str, Any] = {
+            "name": name, "view": args.get("view"), "page": args.get("page"),
+            "size": args.get("size"), "intent": args.get("intent"),
+        }
+        if args.get("full_text"):
+            query_args["full_text"] = True
+        out = _structured(self._call("query_base", query_args, timeout=self._tool_timeout()))
+        out = dict(out)
+        out["items"] = [_with_url(i) for i in out.get("items") or []]
+        return out
 
     def _tool_reviews_due(self, args: dict[str, Any]) -> dict[str, Any]:
         out = _structured(self._call("get_due_reviews", {

@@ -43,6 +43,13 @@ def canned(name, args):
         return {"tags": [{"tag": "#t", "count": 3}]}
     if name == "list_folders":
         return {"folders": [{"name": "Research", "note_count": 2}], "unfiled_count": 7}
+    if name == "list_bases":
+        return {"bases": [{"name": "Reading list", "views": [{"name": "Queue", "type": "table"}]}]}
+    if name == "query_base":
+        assert args["name"]
+        return {"base": "Reading list", "view": args.get("view") or "Queue",
+                "columns": ["file.name", "status"],
+                "items": [_item(7, properties={"status": "unread"})], "total": 1, "page": args.get("page") or 1}
     if name == "get_due_reviews":
         return {"items": [_item(6, text="q")], "due_count": 1}
     if name == "grade_review":
@@ -169,6 +176,22 @@ def test_save_and_append(provider):
     out = json.loads(p.handle_tool_call("dexi_append", {"note_id": "n1", "text": "more"}))
     assert bridge.calls[-1][1] == {"note_id": "n1", "text": "more", "mode": "append"}
     assert out["updated"].startswith("2026-08-15")
+
+
+def test_bases(provider):
+    p, bridge = provider
+    bases = json.loads(p.handle_tool_call("dexi_bases", {"intent": "i"}))
+    assert bases["bases"][0]["views"][0]["type"] == "table"
+    assert bridge.calls[-1] == ("list_bases", {"intent": "i"})
+    out = json.loads(p.handle_tool_call("dexi_query_base", {"name": "reading list", "view": None, "size": 5}))
+    assert out["base"] == "Reading list" and out["columns"] == ["file.name", "status"]
+    assert out["items"][0]["properties"] == {"status": "unread"} and out["items"][0]["url"]
+    assert bridge.calls[-1][1] == {"name": "reading list", "size": 5}  # None-valued args dropped
+    p.handle_tool_call("dexi_query_base", {"name": "x", "full_text": True, "page": 2})
+    assert bridge.calls[-1][1] == {"name": "x", "page": 2, "full_text": True}
+    assert "name" in json.loads(p.handle_tool_call("dexi_query_base", {}))["error"]
+    # read-only connections keep both (they never write)
+    assert {"dexi_bases", "dexi_query_base"} <= {t["name"] for t in READ_TOOLS}
 
 
 def test_reviews(provider):
