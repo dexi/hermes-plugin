@@ -119,7 +119,7 @@ BASES = _tool(
     "dexi_bases",
     "List the user's saved Dexi bases — database-style views over notes (a reading list, "
     "open applications, a literature table) built from `key:: value` property lines. "
-    "Returns each base's name and its views (table/cards). Run one with dexi_query_base.",
+    "Returns each base's name and its views (table/cards/list/map). Run one with dexi_query_base.",
     {},
 )
 

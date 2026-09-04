@@ -1,5 +1,5 @@
 name: dexi
-version: "0.2.0"
+version: "0.2.1"
 description: "Dexi — your notes library (clipped pages, emails, feeds, typed notes) as Hermes memory: recall before each turn, dexi_* tools, optional session digest. OAuth, no API key."
 author: "Dexi <team@dexi.net>"
 homepage: https://dexi.net/mcp/hermes
