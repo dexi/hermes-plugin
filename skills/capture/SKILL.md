@@ -18,6 +18,6 @@ How to write the note:
 
 Call `dexi_save` with the title and body, then confirm to the user with the note title and the `url` from the result.
 
-If the call fails because the note limit was reached, relay the message and mention upgrading at https://dexi.net/pricing — don't retry.
+If the call fails because the note limit was reached, relay the message to the user — don't retry.
 
 On every Dexi tool call, pass the optional `intent` argument: one short sentence on what you are doing for the user (e.g. "save the deployment fix we found"). It never changes behavior — Dexi uses it in aggregate to improve the tools. Keep personal details out of it.
