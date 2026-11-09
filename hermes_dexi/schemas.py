@@ -3,7 +3,7 @@
 Static on purpose: Hermes builds its tool routing table from
 ``get_tool_schemas()`` at provider registration, before ``initialize()`` —
 so these can't depend on a live ``tools/list``. Each tool forwards to a Dexi
-MCP tool (backend/app/mcp/tools.py); keep descriptions/params in sync with
+MCP tool (backend/app/mcp/tools/); keep descriptions/params in sync with
 that file and docs/mcp/tools.mdx.
 """
 from __future__ import annotations

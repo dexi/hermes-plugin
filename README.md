@@ -1,12 +1,12 @@
 # Dexi for Hermes Agent
 
-Your [Dexi](https://dexi.net) notes library — clipped web pages, emailed articles, RSS entries, and typed notes — as [Hermes Agent](https://github.com/NousResearch/hermes-agent)'s long-term memory.
+Your [Dexi](https://dexi.net) notes library — clipped web pages, emailed articles, RSS entries, and typed notes — as [Hermes Agent](https://github.com/NousResearch/hermes-agent)'s long-term memory — the same notes Claude, ChatGPT, Gemini, OpenClaw and any other MCP client you connect read and write, so Hermes shares one memory with them instead of keeping its own.
 
 Two ways to use it, pick one:
 
 | | MCP server (`mcp_servers.dexi`) | **Memory provider (this plugin)** |
 |---|---|---|
-| Tools | all fourteen Dexi tools as `mcp_dexi_*` | compact `dexi_*` set (search / get / list / save / append / tags / folders / bases / reviews) |
+| Tools | all eighteen Dexi tools as `mcp_dexi_*` | compact `dexi_*` set (search / get / list / save / append / tags / folders / bases / reviews) |
 | Auto-recall before each turn (`<dexi-context>`) | — | ✅ |
 | System-prompt guidance | — | ✅ |
 | Session digest note (opt-in) | — | ✅ |
