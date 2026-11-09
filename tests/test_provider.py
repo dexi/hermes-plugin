@@ -297,7 +297,7 @@ def test_session_digest_once_per_session(tmp_path):
     assert len(creates) == 1
     args = creates[0][1]
     assert args["title"].startswith("Hermes session ") and "hi" in args["title"]
-    assert args["text"].startswith("#hermes Session digest written by Hermes Agent (telegram)")
+    assert args["text"].startswith("#hermes #memory Session digest written by Hermes Agent (telegram)")
     assert "Railway healthchecks" in args["text"] and "<dexi-context>" not in args["text"]
     assert "Session: sess-9" in args["text"]
     assert args["intent"] == "session digest"
@@ -352,7 +352,9 @@ def test_build_digest_empty_and_clean():
     assert clean("a  <dexi-context>zzz</dexi-context>\n b") == "a b"
     title, text = build_digest([("q" * 100, "a")], tag="#h", session_id="s")
     assert title.endswith("…") and len(title) < 100
-    assert text.startswith("#h Session digest")
+    assert text.startswith("#h #memory Session digest")
+    # the shared tag is never doubled when the agent tag already is #memory
+    assert build_digest([("q", "a")], tag="#memory")[1].startswith("#memory Session digest")
 
 
 def test_provider_config_schema_has_no_secrets(provider):

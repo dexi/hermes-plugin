@@ -13,6 +13,11 @@ from datetime import datetime, timezone
 MAX_TURNS_LISTED = 12
 MAX_LINE = 240
 MAX_TOTAL = 6000
+# Tag shared by every agent's memory notes in Dexi — the Claude Code plugin
+# saves decisions under it and the OpenClaw plugin's digests carry it too — so
+# a search for #memory finds what any previous agent remembered, while the
+# configurable digest_tag (#hermes) still identifies this agent's notes.
+SHARED_MEMORY_TAG = "#memory"
 _WS = re.compile(r"\s+")
 _CONTEXT_BLOCK = re.compile(r"<dexi-context>.*?</dexi-context>", re.S)
 _TAG_BLOCK = re.compile(r"<[a-z][\w-]*-context>.*?</[a-z][\w-]*-context>", re.S)
@@ -27,6 +32,11 @@ def clean(text: str) -> str:
 def _first_line(text: str, limit: int = MAX_LINE) -> str:
     text = clean(text)
     return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def digest_tags(tag: str) -> str:
+    """``"#hermes #memory"`` — the agent tag plus the shared one, deduplicated."""
+    return tag if tag == SHARED_MEMORY_TAG else f"{tag} {SHARED_MEMORY_TAG}"
 
 
 def build_digest(turns: list[tuple[str, str]], *, tag: str, session_id: str = "",
@@ -45,7 +55,7 @@ def build_digest(turns: list[tuple[str, str]], *, tag: str, session_id: str = ""
     title = f"Hermes session {when.strftime('%Y-%m-%d')} — {_first_line(first_user, 60)}"
 
     lines = [
-        f"{tag} Session digest written by Hermes Agent"
+        f"{digest_tags(tag)} Session digest written by Hermes Agent"
         + (f" ({platform})" if platform else "")
         + f" on {stamp}.",
         "",

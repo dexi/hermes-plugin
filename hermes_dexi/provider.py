@@ -195,8 +195,9 @@ class DexiMemoryProvider(MemoryProvider):
             )
         if self._cfg.get("session_digest"):
             lines.append(
-                f"A {self._cfg.get('digest_tag', '#hermes')} digest note of this session is written "
-                "to Dexi automatically when it ends."
+                f"A digest note of this session, tagged "
+                f"{digestmod.digest_tags(self._cfg.get('digest_tag') or '#hermes')}, "
+                "is written to Dexi automatically when it ends."
             )
         return "\n".join(lines)
 

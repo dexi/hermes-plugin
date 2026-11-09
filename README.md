@@ -48,8 +48,9 @@ Requires `mcp>=1.26,<2` and `httpx` (both already present in a Hermes install wi
 
 - **`prefetch`** — before each non-trivial turn, semantic search over your notes for the incoming message (plus a keyword pass when it contains a `#hashtag` or a "quoted phrase"); hits above the similarity floor are injected as a `<dexi-context>` block of titles + snippets. Never full bodies — the model calls `dexi_get`/`full_text` when it wants one. Best-effort, ~2.5 s budget, failures inject nothing.
 - **Tools** — `dexi_search` (hybrid keyword+semantic, `full_text` option), `dexi_get`, `dexi_list` (source/tag/folder/period/`since`), `dexi_save`, `dexi_append`, `dexi_tags`, `dexi_folders`, `dexi_bases` + `dexi_query_base` (the user's saved database views over `key:: value` properties), `dexi_reviews_due`, `dexi_review_grade`. Each forwards to Dexi's MCP tool of the same purpose; each accepts an optional `intent` sentence for Dexi's aggregate tool analytics.
-- **Session digest** (off by default) — one note per session, written at session end / switch / pre-compress / shutdown, never per turn: the questions asked, the last answer, and the session id, tagged `#hermes`. Deterministic; no LLM call in the plugin. Idempotent per session.
-- **Not done, on purpose** — no note per turn, no mirroring of `MEMORY.md`/`USER.md`, no o2b-style rules/provenance/rollback. Dexi is your notes app; the agent is a reader and an occasional, deliberate writer.
+- **Session digest** (off by default) — one note per session, written at session end / switch / pre-compress / shutdown, never per turn: the questions asked, the last answer, and the session id, tagged `#hermes` plus `#memory` (the tag every Dexi agent plugin shares, so a later agent finds the trail with the rest of your memory — see [Switching agents](https://docs.dexi.net/mcp/shared-memory#switching-agents)). Deterministic; no LLM call in the plugin. Idempotent per session.
+- **Import existing memory** (`hermes dexi import [path]`) — one-shot, deterministic move of memory files into Dexi: `MEMORY.md` / `USER.md` become one note per top-level section, `memory/YYYY-MM-DD.md` daily logs (OpenClaw's layout) one note per day with a `logged::` date property, all tagged `#memory #imported` plus the source agent's tag (`--tag`, default `digest_tag`). Default path is `~/.hermes/memories`; point it at an OpenClaw workspace (`--tag '#openclaw'`) or any folder (`--all`) to bring another agent's memory in. A manifest (`~/.hermes/dexi-imports.json`) makes re-runs idempotent: unchanged sections are skipped, changed ones rewritten in place. `--dry-run` shows the plan. See [Switching agents](https://docs.dexi.net/mcp/shared-memory#switching-agents).
+- **Not done, on purpose** — no note per turn, no live mirroring of `MEMORY.md`/`USER.md` (import is explicit and one-shot), no o2b-style rules/provenance/rollback. Dexi is your notes app; the agent is a reader and an occasional, deliberate writer.
 
 ## What leaves your device
 
@@ -73,13 +74,13 @@ Nothing else — no full transcripts, no `MEMORY.md`, no tool call history. Ever
 | `recall_results` | `5` | max notes injected |
 | `recall_min_similarity` | `0.55` | semantic similarity floor (0–1) |
 | `session_digest` | `false` | write one digest note per session |
-| `digest_tag` | `#hermes` | tag on digest notes (`\w` chars only — Dexi's hashtag syntax) |
+| `digest_tag` | `#hermes` | agent tag on digest notes (`\w` chars only — Dexi's hashtag syntax); `#memory` is always added beside it |
 | `read_only` | `false` | request `notes:read` only; hide write tools |
 | `prefetch_timeout` | `2.5` | seconds; recall is skipped past this |
 | `tool_timeout` | `30` | seconds per explicit tool call |
 | `mcp_url` | `https://mcp.dexi.net/mcp` | override for self-hosted/dev |
 
-CLI (only while `memory.provider` is `dexi`): `hermes dexi status` (config + live probe), `hermes dexi login`, `hermes dexi logout`, `hermes dexi config`.
+CLI (only while `memory.provider` is `dexi`): `hermes dexi status` (config + live probe), `hermes dexi login`, `hermes dexi logout`, `hermes dexi config`, `hermes dexi import [path] [--tag TAG] [--all] [--dry-run]`.
 
 Manage or revoke the grant itself in Dexi → **Settings → Connected apps** — you can also narrow it to one folder/tag there; the change applies on the next request.
 

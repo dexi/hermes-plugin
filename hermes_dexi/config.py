@@ -39,9 +39,18 @@ _FLOAT_KEYS = {"recall_min_similarity", "prefetch_timeout", "tool_timeout"}
 _INT_KEYS = {"recall_results"}
 
 
-def config_path(hermes_home: str | os.PathLike | None) -> Path:
+def home_dir(hermes_home: str | os.PathLike | None) -> Path:
     home = Path(hermes_home) if hermes_home else Path(os.environ.get("HERMES_HOME", "~/.hermes"))
-    return home.expanduser() / f"{PLUGIN_NAME}.json"
+    return home.expanduser()
+
+
+def memories_dir(hermes_home: str | os.PathLike | None) -> Path:
+    """Where Hermes keeps its own MEMORY.md and USER.md."""
+    return home_dir(hermes_home) / "memories"
+
+
+def config_path(hermes_home: str | os.PathLike | None) -> Path:
+    return home_dir(hermes_home) / f"{PLUGIN_NAME}.json"
 
 
 def _coerce(key: str, value: Any) -> Any:

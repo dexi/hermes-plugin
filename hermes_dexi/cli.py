@@ -1,9 +1,11 @@
-"""``hermes dexi {status,login,logout,config}`` — surfaced only while the
-provider is the active ``memory.provider``.
+"""``hermes dexi {status,login,logout,config,import}`` — surfaced only while
+the provider is the active ``memory.provider``.
 
 ``login`` runs the OAuth flow interactively (browser or paste-back) so a
 headless gateway can be authorized once from a terminal; ``logout`` clears
-the cached tokens Hermes holds for the ``dexi`` server.
+the cached tokens Hermes holds for the ``dexi`` server. ``import`` moves an
+agent's memory files (Hermes' ``memories/``, an OpenClaw workspace, or any
+markdown folder) into Dexi as notes — see :mod:`.importer`.
 """
 from __future__ import annotations
 
@@ -11,6 +13,7 @@ import json
 from typing import Any
 
 from . import config as cfgmod
+from . import importer
 from .bridge import BridgeError, McpHttpBridge
 
 
@@ -20,6 +23,17 @@ def register_cli(subparser: Any) -> None:
     subs.add_parser("login", help="Authorize Hermes with your Dexi account (browser or paste-back).")
     subs.add_parser("logout", help="Forget the cached Dexi OAuth tokens on this machine.")
     subs.add_parser("config", help="Print the effective Dexi provider configuration.")
+    imp = subs.add_parser(
+        "import",
+        help="Import an agent's memory files into Dexi — MEMORY.md / USER.md one note per section, "
+             "memory/YYYY-MM-DD.md one note per day; re-running updates changed sections instead of "
+             "duplicating. Default path: ~/.hermes/memories.",
+    )
+    imp.add_argument("path", nargs="?", help="a memory file, a memories/ folder, or an agent workspace (OpenClaw)")
+    imp.add_argument("--tag", help="tag for the agent whose memory this was (default: digest_tag, #hermes)")
+    imp.add_argument("--all", action="store_true", dest="all_files",
+                     help="import every .md file under the path, not just the memory layout")
+    imp.add_argument("--dry-run", action="store_true", help="show what would be created or updated without writing")
     subparser.set_defaults(func=run)
 
 
@@ -42,7 +56,9 @@ def run(args: Any) -> int:
         return _logout()
     if command == "config":
         return _status(probe=False)
-    print("usage: hermes dexi {status,login,logout,config}")
+    if command == "import":
+        return _import(args)
+    print("usage: hermes dexi {status,login,logout,config,import}")
     return 0
 
 
@@ -117,3 +133,56 @@ def _logout() -> int:
     except ImportError:
         print(json.dumps({"error": "not running inside Hermes; nothing to remove"}))
         return 1
+
+
+def _import(args: Any) -> int:
+    home = _hermes_home()
+    cfg = cfgmod.load_config(home)
+    dry_run = bool(getattr(args, "dry_run", False))
+    if cfg.get("read_only") and not dry_run:
+        print("this connection is read-only (read_only: true); nothing imported")
+        return 1
+    root = getattr(args, "path", None) or str(cfgmod.memories_dir(home))
+    files = importer.discover_memory_files(root, all_files=bool(getattr(args, "all_files", False)))
+    if not files:
+        print(f"no memory files under {root}")
+        print("looked for MEMORY.md, USER.md and memory/**/*.md (or memories/); pass a file, a workspace directory, or --all for every .md file")
+        return 1
+    tag = cfgmod.normalize_tag(getattr(args, "tag", None) or cfg.get("digest_tag"))
+    plan = importer.plan_import(files, agent_tag=tag)
+    state = importer.ImportState.for_home(home)
+    print(f"{len(files)} file(s) → {len(plan)} note(s) from {root}{' (dry run — nothing written)' if dry_run else ''}")
+    if dry_run:
+        summary = importer.run_import(_NullBridge(), plan, state, dry_run=True)
+        print(f"would create {summary.created}, update {summary.updated}; {summary.unchanged} unchanged since the last import")
+        return 0
+    bridge = McpHttpBridge(cfg["mcp_url"], server_name=cfgmod.SERVER_NAME,
+                           oauth_config=cfgmod.oauth_config(cfg), hermes_home=home)
+    try:
+        summary = importer.run_import(bridge, plan, state, timeout=float(cfg.get("tool_timeout") or 60.0),
+                                      note_url=cfgmod.note_url)
+    finally:
+        bridge.stop()
+    tail = f", FAILED {summary.failed}" if summary.failed else ""
+    print(f"created {summary.created}, updated {summary.updated}, unchanged {summary.unchanged}{tail}")
+    if summary.failed:
+        return 1
+    if summary.created or summary.updated:
+        print(f"find them in Dexi with the {tag} or #imported tag")
+    return 0
+
+
+class _NullBridge:
+    """Dry runs never touch the network."""
+
+    def start(self) -> None:  # pragma: no cover - trivial
+        pass
+
+    def stop(self) -> None:  # pragma: no cover - trivial
+        pass
+
+    def call_tool(self, name: str, args: dict[str, Any], *, timeout: float | None = None) -> dict[str, Any]:
+        raise BridgeError("dry run")
+
+    def list_tools(self, *, timeout: float | None = None) -> list[dict[str, Any]]:  # pragma: no cover
+        return []
