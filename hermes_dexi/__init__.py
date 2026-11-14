@@ -12,7 +12,7 @@ from .cli import register_cli
 from .config import PLUGIN_NAME
 from .provider import DexiMemoryProvider
 
-__version__ = "0.1.0"
+__version__ = "0.3.1"
 
 SKILLS_DIR = Path(__file__).resolve().parent.parent / "skills"
 _SKILLS = (

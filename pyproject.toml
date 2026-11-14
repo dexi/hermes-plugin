@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hermes-dexi"
-version = "0.3.0"
+version = "0.3.1"
 description = "Dexi memory provider for Hermes Agent — your notes library as agent memory, shared with every other assistant you connect to Dexi, over Dexi's MCP server (OAuth, no API key)."
 readme = "README.md"
 requires-python = ">=3.11"
